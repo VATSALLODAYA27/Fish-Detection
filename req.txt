@@ -1,0 +1,8 @@
+## python==3.12.7
+tensorflow==2.16.1
+ultralytics==8.3.189
+numpy==1.26.4
+opencv-python==4.12.0.88
+Flask==3.0.3
+pandas==2.3.2
+mysql-connector-python==9.4.0
