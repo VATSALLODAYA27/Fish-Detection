@@ -10,7 +10,7 @@ import pymysql
 mydb = pymysql.connect(
     host="localhost",
     user="root",
-    password="root",
+    password="",
     port=3306,  
     database="fish"
 )
@@ -504,12 +504,13 @@ def prediction():
 
 
 import subprocess
+import sys
 @app.route('/camera',methods=['POST','GET'])
 def camera():
     if request.method == 'POST':
-        subprocess.Popen(['python', 'live1.py'])
+        subprocess.Popen([sys.executable, 'live1.py'])
 
     return render_template("camera.html")
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)

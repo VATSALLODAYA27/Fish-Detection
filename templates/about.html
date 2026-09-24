@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>About - Fish Detection System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0c4a6e 0%, #0f172a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        nav {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            padding: 1rem 5%;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(100, 200, 255, 0.2);
+        }
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #38bdf8;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .logo i {
+            font-size: 2.2rem;
+            color: #0ea5e9;
+            animation: swim 4s infinite ease-in-out;
+        }
+        .logo:hover { transform: scale(1.05); color: #7dd3fc; }
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+        .nav-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.05rem;
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .nav-links a:hover {
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.1);
+        }
+        .nav-links a.active {
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.15);
+            font-weight: 600;
+        }
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 3px;
+            background: #38bdf8;
+            border-radius: 2px;
+        }
+
+        .about-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 5% 80px;
+        }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 28px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 4rem;
+            max-width: 1400px;
+            width: 100%;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .about-text h2 {
+            font-size: 3.2rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #38bdf8, #7dd3fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 2rem;
+        }
+
+        .about-text p {
+            font-size: 1.15rem;
+            line-height: 2;
+            color: #cbd5e1;
+            text-align: justify;
+            margin-bottom: 1.5rem;
+        }
+
+        .highlight {
+            color: #38bdf8;
+            font-weight: 600;
+        }
+
+        .video-wrapper {
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 20px;
+            object-fit: cover;
+        }
+
+        @keyframes swim {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            25% { transform: translateX(-10px) rotate(-5deg); }
+            75% { transform: translateX(10px) rotate(5deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .glass-card {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+                padding: 3rem;
+            }
+            .video-wrapper { order: -1; }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links { gap: 1.5rem; }
+            .about-text h2 { font-size: 2.6rem; }
+            .glass-card { padding: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-container">
+            <a href="{{url_for('index')}}" class="logo">
+                Fish Detection
+            </a>
+            <ul class="nav-links">
+                <li><a href="{{url_for('index')}}">Home</a></li>
+                <li><a href="{{url_for('about')}}" class="active">About</a></li>
+                <li><a href="{{url_for('login')}}">Login</a></li>
+                <li><a href="{{url_for('register')}}">Register</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="about-section">
+        <div class="glass-card">
+
+            <!-- Left: Text -->
+            <div class="about-text">
+                <h2>About Fish Detection System</h2>
+                <p>
+                    The project focuses on developing a <span class="highlight">fish detection system</span> using advanced object detection models based on the <span class="highlight">YOLO architecture</span>. By utilizing deep learning models — specifically <span class="highlight">YOLOv11</span> and <span class="highlight">YOLOv9</span> — the system is designed to accurately detect and classify fish species in underwater images and video streams.
+                </p>
+                <p>
+                    The models are trained on a diverse dataset containing various fish species from different marine environments, enabling robust performance in challenging underwater conditions such as varying lighting, water clarity, and fish movement.
+                </p>
+                <p>
+                    A user-friendly web application built with <span class="highlight">Python Flask</span> serves as the main interface, offering features including user registration, login, image upload, and real-time live video detection. The platform delivers instant species identification, bounding box visualization, and confidence scores directly in the browser.
+                </p>
+                <p>
+                    This project aims to provide an efficient, accurate, and scalable tool for marine researchers, conservationists, and aquaculture professionals, contributing to the monitoring, study, and preservation of marine ecosystems through state-of-the-art artificial intelligence.
+                </p>
+            </div>
+
+            <!-- Right: Seamless Looping Demo Video -->
+            <div class="video-wrapper">
+                <video autoplay loop muted playsinline poster="/static/images/fallback-poster.jpg">
+                    <source src="{{ url_for('static', filename='Videos/video_1.mp4') }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+
+        </div>
+    </section>
+
+</body>
+</html>

@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Fish Detection - Prediction</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0c4a6e 0%, #0f172a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        nav {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            padding: 1rem 5%;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(100, 200, 255, 0.2);
+        }
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #38bdf8;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .logo i { font-size: 2.2rem; color: #0ea5e9; animation: swim 4s infinite ease-in-out; }
+        .logo:hover { transform: scale(1.05); color: #7dd3fc; }
+
+        .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+        .nav-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.05rem;
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .nav-links a:hover { color: #38bdf8; background: rgba(56, 189, 248, 0.1); }
+        .nav-links a.active {
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.15);
+            font-weight: 600;
+        }
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 3px;
+            background: #38bdf8;
+            border-radius: 2px;
+        }
+        @keyframes swim {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            25% { transform: translateX(-10px) rotate(-5deg); }
+            75% { transform: translateX(10px) rotate(5deg); }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 140px auto 80px;
+            padding: 2rem;
+            text-align: center;
+        }
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #38bdf8, #7dd3fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+        .subtitle { font-size: 1.3rem; color: #94a3b8; margin-bottom: 40px; }
+
+        .upload-area {
+            border: 3px dashed #38bdf8;
+            border-radius: 20px;
+            padding: 60px;
+            background: rgba(56, 189, 248, 0.05);
+            margin: 40px auto;
+            max-width: 600px;
+            transition: all 0.4s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        .upload-area:hover { 
+            background: rgba(56, 189, 248, 0.1); 
+            border-color: #0ea5e9; 
+        }
+        .upload-area.dragover { 
+            background: rgba(14, 165, 233, 0.2); 
+            border-color: #7dd3fc;
+            transform: scale(1.02);
+        }
+        .upload-area.success {
+            border-color: #34d399;
+            background: rgba(52, 211, 153, 0.1);
+            animation: pulse 1.5s ease-out;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(52, 211, 153, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+        }
+
+        .file-info {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: #94a3b8;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .file-info.show { opacity: 1; }
+        .file-name { color: #34d399; font-weight: 600; margin-left: 8px; }
+
+        #file-input { display: none; }
+
+        .btn {
+            padding: 16px 60px;
+            background: #38bdf8;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            box-shadow: 0 10px 30px rgba(56, 189, 248, 0.4);
+        }
+        .btn:hover { background: #0ea5e9; transform: translateY(-5px); }
+
+        .loading {
+            display: none;
+            margin: 50px 0;
+            color: #38bdf8;
+            font-size: 1.3rem;
+        }
+        .spinner {
+            border: 6px solid #1e293b;
+            border-top: 6px solid #38bdf8;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .result { display: {% if has_result %}block{% else %}none{% endif %}; margin-top: 60px; }
+        .images-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin: 50px 0;
+        }
+        .image-box {
+            background: rgba(15, 23, 42, 0.9);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+        }
+        .image-box h3 {
+            color: #38bdf8;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        .image-box img {
+            max-width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .detection-list {
+            background: rgba(15, 23, 42, 0.9);
+            padding: 30px;
+            border-radius: 16px;
+            margin-top: 40px;
+            text-align: left;
+        }
+        .detection-list h3 {
+            color: #38bdf8;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.9rem;
+        }
+
+        .detection-card {
+            background: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 14px;
+            padding: 20px;
+            margin: 18px 0;
+            transition: all 0.3s ease;
+        }
+        .detection-card:hover {
+            background: rgba(56, 189, 248, 0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(56, 189, 248, 0.15);
+        }
+
+        .fish-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #7dd3fc;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .confidence {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            margin-bottom: 14px;
+        }
+
+        .info-row {
+            display: flex;
+            margin: 10px 0;
+            font-size: 1.05rem;
+        }
+        .info-label {
+            width: 140px;
+            font-weight: 500;
+            color: #cbd5e1;
+        }
+        .info-value {
+            flex: 1;
+        }
+
+        .eatable-yes   { color: #34d399; font-weight: 600; }
+        .eatable-no    { color: #f87171; font-weight: 600; }
+        .status-safe    { color: #34d399; }
+        .status-warning { color: #fbbf24; }
+        .status-danger  { color: #f87171; }
+
+        .error {
+            color: #fca5a5;
+            font-size: 1.3rem;
+            margin: 30px 0;
+            background: rgba(239, 68, 68, 0.1);
+            padding: 15px;
+            border-radius: 12px;
+        }
+
+        @media (max-width: 992px) {
+            .images-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            h1 { font-size: 2.8rem; }
+            .upload-area { padding: 40px; }
+            .info-row { flex-direction: column; gap: 4px; }
+            .info-label { width: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav>
+        <div class="nav-container">
+            <a href="{{ url_for('home') }}" class="logo">
+                <i class="fas fa-fish"></i> Fish Detection
+            </a>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('prediction') }}" class="active">Prediction</a></li>
+                <li><a href="{{ url_for('camera') }}">Live Detection</a></li>
+                <li><a href="{{ url_for('login') }}">Log-out</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Fish Species Detection</h1>
+        <p class="subtitle">Upload an underwater image and discover species, edibility & conservation info</p>
+
+        <!-- UPLOAD FORM -->
+        <form method="POST" enctype="multipart/form-data" id="upload-form">
+            <div class="upload-area" id="upload-area">
+                <i class="fas fa-cloud-upload-alt" id="upload-icon" style="font-size: 5rem; color: #38bdf8; margin-bottom: 20px; transition: all 0.4s ease;"></i>
+                <p id="upload-text" style="font-size: 1.3rem; color: #e2e8f0; margin-bottom: 10px; transition: all 0.4s ease;">
+                    Click to upload or drag & drop image
+                </p>
+                <div class="file-info" id="file-info">
+                    <i class="fas fa-check-circle"></i> Selected: <span class="file-name" id="file-name"></span>
+                </div>
+                <input type="file" name="file" id="file-input" accept="image/*" required />
+            </div>
+            <button type="submit" class="btn" id="detect-btn">Detect Fish</button>
+        </form>
+
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing image with YOLO model...</p>
+        </div>
+
+        <!-- Error -->
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <!-- Results -->
+        <div class="result" id="result">
+            <h2 style="color:#38bdf8; font-size:2.8rem; margin:40px 0;">Detection Results</h2>
+
+            <div class="images-grid">
+                <div class="image-box">
+                    <h3>Original Image</h3>
+                    {% if original_image %}
+                        <img src="{{ original_image }}" alt="Original">
+                    {% endif %}
+                </div>
+                <div class="image-box">
+                    <h3>Detection Result</h3>
+                    {% if result_image %}
+                        <img src="{{ result_image }}" alt="Detected">
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="detection-list">
+                <h3>Detected Fish Species</h3>
+
+                {% if detections|length > 0 %}
+                    {% for d in detections %}
+                    <div class="detection-card">
+                        <div class="fish-name">
+                            <i class="fas fa-fish"></i>
+                            {{ d.name }}
+                        </div>
+
+                        <div class="confidence">
+                            Confidence: <strong>{{ d.confidence_percent }}%</strong>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Eatable:</div>
+                            <div class="info-value">
+                                <span class="{% if 'Yes' in d.eatable %}eatable-yes{% else %}eatable-no{% endif %}">
+                                    {{ d.eatable }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Status:</div>
+                            <div class="info-value">
+                                <span class="
+                                    {% if 'Least Concern' in d.status or 'Not Threatened' in d.status %}status-safe
+                                    {% elif 'Near Threatened' in d.status or 'Vulnerable' in d.status %}status-warning
+                                    {% else %}status-danger{% endif %}
+                                ">
+                                    {{ d.status }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Preservation:</div>
+                            <div class="info-value">{{ d.preservation }}</div>
+                        </div>
+
+                        <div class="info-row" style="margin-top: 14px;">
+                            <div class="info-label">Benefits:</div>
+                            <div class="info-value">{{ d.benefits }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="text-align:center; color:#94a3b8; font-size:1.3rem; padding:40px;">
+                        No fish detected in this image.
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const uploadIcon = document.getElementById('upload-icon');
+        const uploadText = document.getElementById('upload-text');
+        const fileInfo = document.getElementById('file-info');
+        const fileNameSpan = document.getElementById('file-name');
+        const loading = document.getElementById('loading');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        ['dragover', 'dragenter'].forEach(e => {
+            uploadArea.addEventListener(e, ev => {
+                ev.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(e => {
+            uploadArea.addEventListener(e, ev => {
+                ev.preventDefault();
+                uploadArea.classList.remove('dragover');
+            });
+        });
+
+        uploadArea.addEventListener('drop', e => {
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelect(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) {
+                handleFileSelect(fileInput.files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            uploadArea.classList.add('success');
+            uploadArea.classList.remove('dragover');
+
+            uploadIcon.className = "fas fa-check-circle";
+            uploadIcon.style.color = "#34d399";
+            uploadText.textContent = "Image ready! Click Detect Fish";
+            uploadText.style.color = "#94a3b8";
+
+            fileNameSpan.textContent = file.name;
+            fileInfo.classList.add('show');
+        }
+
+        document.getElementById('upload-form').addEventListener('submit', () => {
+            if (fileInput.files.length === 0) {
+                alert("Please select an image first!");
+                return false;
+            }
+            loading.style.display = 'block';
+        });
+    </script>
+</body>
+</html>

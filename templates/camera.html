@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Fish Detection - Live Camera</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0c4a6e 0%, #0f172a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        /* Same Navbar as All Pages */
+        nav {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            padding: 1rem 5%;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(100, 200, 255, 0.2);
+        }
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #38bdf8;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .logo i {
+            font-size: 2.2rem;
+            color: #0ea5e9;
+            animation: swim 4s infinite ease-in-out;
+        }
+        .logo:hover { transform: scale(1.05); color: #7dd3fc; }
+        .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+        .nav-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.05rem;
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .nav-links a:hover { color: #38bdf8; background: rgba(56, 189, 248, 0.1); }
+        .nav-links a.active {
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.15);
+            font-weight: 600;
+        }
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 3px;
+            background: #38bdf8;
+            border-radius: 2px;
+        }
+        @keyframes swim {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            25% { transform: translateX(-10px) rotate(-5deg); }
+            75% { transform: translateX(10px) rotate(5deg); }
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 140px auto 80px;
+            padding: 2rem;
+            text-align: center;
+        }
+        h1 {
+            font-size: 3.8rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #38bdf8, #7dd3fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+        .subtitle {
+            font-size: 1.4rem;
+            color: #94a3b8;
+            margin-bottom: 50px;
+            line-height: 1.6;
+        }
+
+        .camera-box {
+            background: rgba(15, 23, 42, 0.8);
+            padding: 60px 40
+
+px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            margin: 40px 0;
+        }
+
+        .camera-icon {
+            font-size: 6rem;
+            color: #38bdf8;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .btn-live {
+            padding: 18px 70px;
+            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            box-shadow: 0 15px 40px rgba(56, 189, 248, 0.5);
+            margin-top: 20px;
+        }
+        .btn-live:hover {
+            transform: translateY(-8px);
+            background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+            box-shadow: 0 20px 50px rgba(14, 165, 233, 0.6);
+        }
+
+        .instructions {
+            background: rgba(56, 189, 248, 0.1);
+            padding: 20px;
+            border-radius: 16px;
+            margin: 40px 0;
+            border-left: 5px solid #38bdf8;
+            font-size: 1.1rem;
+            color: #cbd5e1;
+        }
+
+        .status {
+            margin-top: 30px;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: 600;
+            display: none;
+        }
+        .status.running {
+            display: block;
+            background: rgba(34, 197, 94, 0.2);
+            color: #86efac;
+            border: 1px solid #22c55e;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.8rem; }
+            .camera-icon { font-size: 4.5rem; }
+            .btn-live { padding: 16px 50px; font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Same Navbar with "Live Detection" active -->
+    <nav>
+        <div class="nav-container">
+            <a href="{{ url_for('home') }}" class="logo">
+                <i class="fas fa-fish"></i> Fish Detection
+            </a>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('prediction') }}">Prediction</a></li>
+                <li><a href="{{ url_for('camera') }}" class="active">Live Detection</a></li>
+                <li><a href="{{ url_for('login') }}">Log-out</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Live Fish Detection</h1>
+        <p class="subtitle">Open your camera and detect fish species in real-time using advanced AI</p>
+
+        <div class="camera-box">
+            <i class="fas fa-video camera-icon"></i>
+            <h2 style="color:#38bdf8; font-size:2rem; margin:20px 0;">Ready to Start Live Detection</h2>
+            <p>Click the button below to launch real-time fish detection from your webcam</p>
+
+            <form method="POST">
+                <button type="submit" class="btn-live">
+                    <i class="fas fa-play-circle"></i> Start Live Detection
+                </button>
+            </form>
+
+            <div class="status" id="status">
+                Live detection is running... Press 'q' in the window to stop.
+            </div>
+        </div>
+
+        <div class="instructions">
+            <strong>How it works:</strong><br>
+            • Click "Start Live Detection"<br>
+            • A new window will open showing your camera feed<br>
+            • AI will detect and label fish in real-time<br>
+            • Press <strong>'q'</strong> on your keyboard to quit
+        </div>
+    </div>
+
+    <script>
+        // Show status after form submit
+        document.querySelector('form').addEventListener('submit', function() {
+            document.getElementById('status').classList.add('running');
+        });
+    </script>
+</body>
+</html>
