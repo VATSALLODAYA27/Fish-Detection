@@ -5,25 +5,20 @@ from flask import Flask,render_template,request,redirect, url_for
 
 app = Flask(__name__)
 
-import pymysql
+import sqlite3
 
-mydb = pymysql.connect(
-    host="localhost",
-    user="root",
-    password="",
-    port=3306,  
-    database="fish"
-)
-
+mydb = sqlite3.connect("fish.db", check_same_thread=False)
+mydb.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT, password TEXT)")
+mydb.commit()
 mycursor = mydb.cursor()
 
 def executionquery(query,values):
-    mycursor.execute(query,values)
+    mycursor.execute(query.replace("%s", "?"),values)
     mydb.commit()
     return
 
 def retrivequery1(query,values):
-    mycursor.execute(query,values)
+    mycursor.execute(query.replace("%s", "?"),values)
     data = mycursor.fetchall()
     return data
 
@@ -503,14 +498,21 @@ def prediction():
     )
 
 
-import subprocess
-import sys
-@app.route('/camera',methods=['POST','GET'])
+@app.route('/camera')
 def camera():
-    if request.method == 'POST':
-        subprocess.Popen([sys.executable, 'live1.py'])
-
     return render_template("camera.html")
 
+@app.route('/predict_frame', methods=['POST'])
+def predict_frame():
+    img = cv2.imdecode(np.frombuffer(request.get_data(), np.uint8), cv2.IMREAD_COLOR)
+    if img is None:
+        return "Invalid image", 400
+    for box in model(img, conf=0.3, verbose=False)[0].boxes:
+        x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
+        label = f"{model.names[int(box.cls[0])]} {float(box.conf[0]):.2f}"
+        cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 3)
+        cv2.putText(img, label, (x1, max(y1 - 8, 15)), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+    return cv2.imencode('.jpg', img)[1].tobytes(), 200, {'Content-Type': 'image/jpeg'}
+
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=False)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))

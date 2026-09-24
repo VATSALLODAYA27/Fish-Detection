@@ -31,7 +31,7 @@ This is handled in the `/prediction` route in `app.py`:
    - If a detected class isn't in `FISH_INFO`, it falls back to a generic `"unknown"` entry.
 6. The original image, the annotated (boxed) image, and the results table are all sent back to `prediction.html` and rendered — that's how the page tells you "this is a *Rui*" (or whichever species) along with confidence % and the extra info.
 
-The **live camera** mode (`camera.html` → `/camera` route) does the same detection loop but continuously on webcam frames, using `live1.py`, which is launched as a separate process and shows results in an OpenCV window instead of the browser.
+The **live camera** page (`/camera`) uses your browser webcam: the page sends a frame to `/predict_frame` about 3 times a second and shows the returned image with boxes drawn. `live1.py` is the older standalone OpenCV-window version and is not used by the web app.
 
 ## Project structure (this folder)
 
@@ -40,7 +40,7 @@ FRONTEND/
 ├── app.py            Flask app: routes for home/login/register/prediction/camera
 ├── live1.py           Standalone webcam live-detection script (opens its own OpenCV window)
 ├── model.pt            Trained YOLO weights (the "dataset connection")
-├── db.sql               Creates the MySQL `fish` database + `users` table (for login/register)
+├── db.sql               Old MySQL schema (unused; the app now creates a SQLite `fish.db` itself)
 ├── req.txt                Original package list this project was built with
 ├── templates/           HTML pages (index, home, login, register, prediction, camera, about)
 └── static/                CSS/JS/uploads
@@ -49,38 +49,28 @@ FRONTEND/
 ## Steps to run the app
 
 ### 1. Prerequisites
-- Python 3.10+ (3.10 recommended — matches what's installed in `.venv` here)
-- MySQL server (this project was set up against **XAMPP MySQL**, default `root` user with **no password**)
+- Python 3.10+ (no database server needed; users are stored in a local SQLite file `fish.db`, created on first run)
 
-### 2. Set up the database
-Start MySQL (e.g. via XAMPP control panel, or `mysql_start.bat`), then run:
-```bash
-mysql -u root < db.sql
-```
-This drops/creates the `fish` database and a `users` table used by `/login` and `/register`.
-
-> If your MySQL root user has a password, update the `pymysql.connect(...)` block at the top of `app.py` to match (`host`, `user`, `password`, `port`).
-
-### 3. Create a virtual environment and install dependencies
+### 2. Create a virtual environment and install dependencies
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
-pip install flask pymysql ultralytics opencv-python numpy
+pip install flask ultralytics opencv-python numpy
 ```
 (`ultralytics` pulls in `torch`/`torchvision` automatically — first install can take a few minutes.)
 
-### 4. Run the app
+### 3. Run the app
 ```bash
 python app.py
 ```
 Flask will start on **http://127.0.0.1:5000**. Open that URL in a browser.
 
-### 5. Use it
+### 4. Use it
 - **Home / About** — landing pages.
 - **Register / Login** — create an account, stored in the `users` table.
 - **Prediction** — upload a fish image; the annotated image + species info table is shown.
-- **Camera** — starts `live1.py` in a separate process for real-time webcam detection (opens a native OpenCV window, requires a connected webcam).
+- **Camera** — click Start and allow camera access; detections are drawn live in the page.
 
 ### Notes
-- `app.py` runs with `debug=True` by default. When running behind an automated preview/process manager that restarts by re-invoking the script from a different working directory, add `use_reloader=False` to `app.run(...)` to avoid the debug auto-reloader losing track of the script path.
+- Passwords are stored in plain text in `fish.db` — fine for a demo, not for production.
 - The `static/uploads` folder is created automatically on first run if it doesn't exist.

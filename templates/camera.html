@@ -206,31 +206,41 @@ px;
             <h2 style="color:#38bdf8; font-size:2rem; margin:20px 0;">Ready to Start Live Detection</h2>
             <p>Click the button below to launch real-time fish detection from your webcam</p>
 
-            <form method="POST">
-                <button type="submit" class="btn-live">
-                    <i class="fas fa-play-circle"></i> Start Live Detection
-                </button>
-            </form>
+            <button id="start" class="btn-live"><i class="fas fa-play-circle"></i> Start Live Detection</button>
+            <video id="cam" autoplay playsinline muted style="display:none"></video>
+            <img id="out" style="display:none;max-width:100%;border-radius:16px;margin-top:20px" alt="Detections">
 
             <div class="status" id="status">
-                Live detection is running... Press 'q' in the window to stop.
+                Live detection is running... reload the page to stop.
             </div>
         </div>
 
         <div class="instructions">
             <strong>How it works:</strong><br>
             • Click "Start Live Detection"<br>
-            • A new window will open showing your camera feed<br>
+            • Allow camera access when your browser asks<br>
             • AI will detect and label fish in real-time<br>
-            • Press <strong>'q'</strong> on your keyboard to quit
+            • Reload the page to stop
         </div>
     </div>
 
     <script>
-        // Show status after form submit
-        document.querySelector('form').addEventListener('submit', function() {
+        const cam = document.getElementById('cam'), out = document.getElementById('out');
+        const canvas = document.createElement('canvas');
+        document.getElementById('start').onclick = async () => {
+            cam.srcObject = await navigator.mediaDevices.getUserMedia({ video: true });
+            await cam.play();
             document.getElementById('status').classList.add('running');
-        });
+            out.style.display = 'block';
+            (async function loop() {
+                canvas.width = cam.videoWidth; canvas.height = cam.videoHeight;
+                canvas.getContext('2d').drawImage(cam, 0, 0);
+                const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.7));
+                const res = await fetch('/predict_frame', { method: 'POST', body: blob });
+                if (res.ok) out.src = URL.createObjectURL(await res.blob());
+                setTimeout(loop, 300);
+            })();
+        };
     </script>
 </body>
 </html>
